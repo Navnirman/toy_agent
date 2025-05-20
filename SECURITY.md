@@ -1,9 +1,16 @@
+# SECURITY.md
+
 # Security & Sandbox Guidelines
 
+## Docker Sandbox Requirement
+- **Mandatory Docker**: All user-generated code must run inside Docker containers to ensure strong isolation.
+- **Container flags**: Always use `--network none`, `--memory=256m`, and `--cpus=" .5"` for sandbox runs.
+- **Ephemeral execution**: Containers are run with `--rm` and mount only the specific code file (read-only).
+
 ## Isolation & Execution
-- **Subprocess** or Docker container with `--network none`.
-- **Filesystem**: Code runs in a temp dir; no write access outside.
-- **Resource Limits**: 2 s CPU timeout, RLIMIT_AS for memory cap (e.g., 256 MB).
+- **Subprocess wrapper**: Launch Docker from a parent process to apply timeouts and capture output.
+- **Filesystem**: Containers mount only the temp directory containing the user script; no other host paths.
+- **Resource Limits**: Enforced by Docker flags (`memory`, `cpus`) and `timeout` for CPU time.
 
 ## Built-in & Module Restrictions
 - **Whitelist Built-ins**: `print`, `len`, `sum`, `min`, `max`, `range`, `enumerate`.
@@ -11,11 +18,10 @@
 - **Code Size**: Limit to ≤ 200 lines.
 
 ## Network & Data Safety
-- **No external network**: block internet by default.
+- **No external network**: Docker `--network none` blocks all Internet access.
 - **Timeout Retries**: Max 3 execution retries per question.
 - **Audit Logs**: Record code hash, execution time, and resource usage.
 
 ## Security Testing
 - Include pytest fixtures that attempt prohibited actions (e.g., `import os`) and confirm failures.
 - Automate periodic sandbox config reviews and CI checks for policy compliance.
-
