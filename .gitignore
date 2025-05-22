@@ -1,0 +1,6 @@
+# Ignore the Python virtual environment directory
+csv_agent/
+
+.python-version
+
+.env
