@@ -82,3 +82,34 @@ Added pytest tests in `tests/test_tools.py` (all passing):
 
 ## Next Steps
 - Proceed to **Milestone 3: Planner–Executor Loop** as per IMPLEMENTATION.md.
+
+## Milestone 3 — Planner–Executor Loop (completed)
+Implemented the core loop in `app/agent.py`:
+  - Quick fallback to deterministic `answer_question` for simple row count and column name queries.
+  - Caching via `app.memory` (stubbed) to avoid repeated OpenAI calls.
+  - Chat-based code generation using OpenAI ChatCompletion (`gpt-4.1-mini` by default), with a 1s API timeout.
+  - Code extraction from fenced blocks, static multi-attempt retry (up to 3) on execution errors.
+  - Integrated secure execution sandbox (`app/tools.run_python`) to run pandas code in Docker.
+  - CLI (`app/run.py`) and FastAPI (`app/api.py`) upgraded to invoke the agent loop instead of the static oracle.
+  - Updated tests to import `app` and accept safe fallthrough for unsupported questions.
+
+## Milestone 4 — Result Post-Processing (in progress)
+Started updating the sandbox and agent to handle post-processing of outputs:
+  - `app/tools.run_python` now mounts the sandbox directory as read-write and collects any output files (e.g., PNG charts) into a host-side `agent_outputs/` directory, exposing their paths via the `files` field.
+  - `app/agent.main` now checks for generated files, returning their paths immediately.
+  - Next steps:
+    - Parse scalar and DataFrame outputs from `stdout` into Markdown tables using pandas parsing.
+    - Support chart embedding or linking in CLI/API responses.
+    - Optionally prompt the model for a natural-language summary of results.
+
+## Milestone 5 — Agent Memory (completed)
+Implemented a persistent cache layer in `app/memory.py`:
+  - SQLite-based KV store (`agent_memory.db` by default) with thread-safe access via `threading.Lock`.
+  - Schema: `(key TEXT PRIMARY KEY, result TEXT JSON, timestamp TEXT)`.
+  - Configurable database path via `AGENT_MEMORY_DB` environment variable.
+  - `get_cache(key)`: retrieves and JSON-decodes stored results (or returns raw string or `None`).
+  - `set_cache(key, result)`: JSON-encodes results and records UTC timestamp.
+  - Integrated into `app/agent.main` to skip OpenAI calls and sandbox execution when a cache hit occurs.
+
+### Tests for Memory
+- `tests/test_memory.py`: verifies round-trip storage and retrieval using a temporary database file, ensuring persistence across module reloads.

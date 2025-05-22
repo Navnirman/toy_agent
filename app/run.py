@@ -9,11 +9,19 @@ def parse_args():
 
 def main():
     args = parse_args()
-    from app.oracle import answer_question
+    from app.agent import main as agent_main
 
     try:
-        result = answer_question(args.question, args.csv_path)
-        print(result)
+        result = agent_main(args.question, args.csv_path)
+        # Handle file outputs (e.g., charts)
+        if isinstance(result, dict) and 'files' in result:
+            for path in result['files']:
+                if isinstance(path, str) and path.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+                    print(f"![chart]({path})")
+                else:
+                    print(path)
+        else:
+            print(result)
     except Exception as e:
         print(f"Error: {e}")
 

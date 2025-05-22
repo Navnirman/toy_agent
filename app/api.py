@@ -2,7 +2,7 @@
 """FastAPI API for CSV Data-Analyst Agent."""
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from app.oracle import answer_question
+from app.agent import main as agent_main
 
 class AskRequest(BaseModel):
     question: str
@@ -16,7 +16,7 @@ app = FastAPI()
 @app.post("/ask", response_model=AskResponse)
 def ask(request: AskRequest):
     try:
-        result = answer_question(request.question, request.csv_path)
+        result = agent_main(request.question, request.csv_path)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
